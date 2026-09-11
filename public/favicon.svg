@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Calendário F1">
+  <rect width="64" height="64" rx="14" fill="#050505"/>
+  <path d="M12 20h40M19 12v16M45 12v16M16 18h32v32H16z" fill="none" stroke="#d4af37" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+  <path d="M24 42h16" stroke="#f0d77c" stroke-linecap="round" stroke-width="4"/>
+</svg>
