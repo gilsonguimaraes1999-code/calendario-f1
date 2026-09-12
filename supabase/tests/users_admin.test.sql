@@ -1,0 +1,45 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+set local search_path = public, extensions;
+select no_plan();
+select has_function('public','list_access_users',array['integer','integer']);
+select has_function('public','update_access_user',array['uuid','jsonb']);
+select has_function('public','delete_access_user',array['uuid']);
+insert into auth.users(id,email) values
+ ('77777777-7777-4777-8777-777777777771','manager@example.test'),
+ ('77777777-7777-4777-8777-777777777772','request@example.test'),
+ ('77777777-7777-4777-8777-777777777773','owner@example.test');
+update profiles set status='approved' where id='77777777-7777-4777-8777-777777777771';
+update permissions set can_manage_users=true where profile_id='77777777-7777-4777-8777-777777777771';
+update profiles set role='owner',status='approved' where id='77777777-7777-4777-8777-777777777773';
+insert into incidents(incident_date,kind,note,author_id) values ('2026-09-29','full_day','history preserved','77777777-7777-4777-8777-777777777772');
+set local role anon;
+select throws_ok($$select public.list_access_users(0,500)$$,'42501',null,'anonymous cannot read users');
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','77777777-7777-4777-8777-777777777772',true);
+select throws_ok($$select public.list_access_users(0,500)$$,'42501',null,'pending member cannot read users');
+select throws_ok($$select public.delete_access_user('77777777-7777-4777-8777-777777777771')$$,'42501',null,'pending member cannot delete');
+select set_config('request.jwt.claim.sub','77777777-7777-4777-8777-777777777771',true);
+select lives_ok($$select public.list_access_users(0,500)$$,'manager without calendar view may list');
+select throws_ok($$select public.update_access_user(auth.uid(),'{"status":"suspended"}')$$,'P0001',null,'self mutation protected');
+select throws_ok($$select public.update_access_user('77777777-7777-4777-8777-777777777773','{"status":"suspended"}')$$,'P0001',null,'last owner suspension protected');
+select throws_ok($$select public.delete_access_user('77777777-7777-4777-8777-777777777773')$$,'P0001',null,'last owner deletion protected');
+select throws_ok($$select public.update_access_user('77777777-7777-4777-8777-777777777772','{"role":"owner"}')$$,'22023',null,'role escalation rejected');
+select throws_ok($$select public.update_access_user('77777777-7777-4777-8777-777777777772','{"permissions":{"can_view":"true"}}')$$,'22023',null,'nonboolean/incomplete permissions rejected');
+select is(public.update_access_user('77777777-7777-4777-8777-777777777772','{"status":"approved","permissions":{"can_view":true,"can_view_all":true,"can_create":true,"can_edit":false,"can_delete":false,"can_manage_users":false}}')->>'status','approved','approve with all visibility');
+select is(public.update_access_user('77777777-7777-4777-8777-777777777772','{"status":"rejected"}')->>'status','rejected','reject member');
+select is(public.update_access_user('77777777-7777-4777-8777-777777777772','{"status":"suspended"}')->>'status','suspended','suspend member');
+select is(public.update_access_user('77777777-7777-4777-8777-777777777772','{"status":"approved"}')->>'status','approved','reapprove member');
+reset role;
+update profiles set status='suspended' where id='77777777-7777-4777-8777-777777777771';
+set local role authenticated;
+select throws_ok($$select public.delete_access_user('77777777-7777-4777-8777-777777777772')$$,'42501',null,'revoked manager denied at database boundary');
+select set_config('request.jwt.claim.sub','77777777-7777-4777-8777-777777777773',true);
+select is(public.delete_access_user('77777777-7777-4777-8777-777777777772'),'77777777-7777-4777-8777-777777777772'::uuid,'owner deletes member transactionally');
+reset role;
+select is((select count(*) from auth.users where id='77777777-7777-4777-8777-777777777772'),0::bigint,'Auth account removed');
+select is((select count(*) from permissions where profile_id='77777777-7777-4777-8777-777777777772'),0::bigint,'permission row cascaded');
+select is((select author_id from incidents where note='history preserved'),null::uuid,'incident history survives deletion');
+select * from finish();
+rollback;
