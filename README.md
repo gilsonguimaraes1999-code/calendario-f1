@@ -2,7 +2,7 @@
 
 Calendário operacional independente para registrar indisponibilidades do F1. Interface preta/dourada, autenticação por solicitação de acesso, administração de membros e resumo mensal determinístico, sem API de IA.
 
-**Estado da entrega:** implementação concluída na branch `main` local e publicada para revisão na branch `codex/calendario-f1` do [repositório do projeto](https://github.com/gilsonguimaraes1999-code/calendario-f1). Supabase não está configurado e não há deploy na Vercel. O build não é prova de integração com banco. As migrations, RPCs, RLS e fluxo de e-mail precisam da etapa local de validação descrita abaixo.
+**Estado da entrega:** aplicação publicada na branch `main` do [repositório do projeto](https://github.com/gilsonguimaraes1999-code/calendario-f1) e disponível em [calendario-f1.vercel.app](https://calendario-f1.vercel.app). A produção usa o projeto Supabase `ztmlanvtmpdphtxjnwcy`; as migrations, RLS, autenticação e conta proprietária inicial foram configuradas.
 
 ## Executar localmente
 
@@ -88,7 +88,7 @@ Esse fluxo cobre pendente→aprovação, permissões, escopo próprio/todos, dua
 Quando `document.modelContext.registerTool` está disponível, o calendário registra duas ferramentas e as remove ao desmontar:
 
 - `consult_calendar_month`: `{ year, month }`, consulta o escopo permitido e mostra esse mês, retornando ocorrências, métricas e resumo.
-- `register_incident`: `{ date, kind, startTime, endTime, note }`, persiste a ocorrência. Parcial usa `HH:MM` e fim posterior ao início; dia inteiro usa horários `null`. Não preenche autor/ID por entrada externa.
+- `register_incident`: `{ date, kind, startTime, endTime, note? }`, persiste a ocorrência. A anotação é opcional. Parcial usa `HH:MM` e fim posterior ao início; dia inteiro usa horários `null`. Não preenche autor/ID por entrada externa.
 
 A integração é opcional por detecção de suporte; navegadores comuns continuam funcionando. Há também um **adaptador HTTP específico deste app**, não uma implementação alegada de protocolo HTTP WebMCP padrão: `GET /.well-known/webmcp` descreve as ferramentas e `POST` aceita `{ "tool": "nome", "input": { ... } }`. POST exige a mesma sessão e `Origin` canônico. Dados do calendário não são públicos. Nenhuma ferramenta administra usuários ou recebe chave de serviço.
 
@@ -96,7 +96,7 @@ Ferramentas e UI usam as mesmas Server Actions, schemas, escopo e RLS. O resulta
 
 O registro/execução/limpeza foi testado por contexto injetado e leituras reais das camadas de aplicação com o Supabase substituído apenas na fronteira externa. A compatibilidade com uma implementação nativa real de WebMCP ainda precisa de validação em navegador que a suporte e sessão local configurada.
 
-## GitHub autorizado; configuração Supabase e deploy Vercel pendentes
+## Publicação
 
 O envio do código ao repositório abaixo está autorizado. Antes de colocar a aplicação em produção na Vercel, conclua banco local, e-mails, testes autenticados e revisão do usuário. Publicar o código no GitHub não configura o Supabase nem disponibiliza automaticamente o site.
 
@@ -106,4 +106,5 @@ O envio do código ao repositório abaixo está autorizado. Antes de colocar a a
 4. Configure URL/chave pública do Supabase independente e `APP_URL` em cada ambiente Vercel. Não adicione chaves administrativas se não forem necessárias. Preview não deve apontar para produção nem ter permissões de owner reais. Publique variáveis no ambiente correto e reconstrua quando alterar `NEXT_PUBLIC_*`.
 5. Configure no Auth as URLs de callback/recuperação da origem final autorizada; teste e-mails, cookies, logout, 401/403, RLS, owner protegido e todos os fluxos novamente. Migrations **não** são executadas automaticamente pelo build/Vercel: aplique-as ao novo banco somente com autorização específica e backup quando houver dados.
 
-O código está publicado na branch de revisão `codex/calendario-f1`; Supabase e Vercel permanecem sem configuração/deploy nesta etapa.
+O código está publicado na `main`, conectado à Vercel e integrado ao Supabase independente do Calendário F1.
+

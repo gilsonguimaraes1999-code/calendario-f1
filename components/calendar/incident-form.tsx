@@ -49,10 +49,11 @@ export function IncidentForm({ date, incident, onSave, onCancel }: IncidentFormP
         <p className="field-help" id={`${id}-time-help`}>Horários do mesmo dia, no formato HH:MM (24h).</p>
         {duration > 0 && <p className="duration-preview"><Clock3 size={14} aria-hidden="true" />{duration} minutos de indisponibilidade</p>}
       </> : <p className="full-day-notice">O dia será considerado totalmente indisponível: 24 horas.</p>}
-      <label className="note-field" htmlFor={`${id}-note`}>Anotação<textarea id={`${id}-note`} rows={4} placeholder="Descreva o que aconteceu com o F1…" value={note} onChange={(event) => setNote(event.target.value)} /></label>
+      <label className="note-field" htmlFor={`${id}-note`}><span>Anotação <span className="field-optional">(opcional)</span></span><textarea id={`${id}-note`} aria-label="Anotação" rows={4} placeholder="Se quiser, descreva o que aconteceu com o F1…" value={note} onChange={(event) => setNote(event.target.value)} /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
       <div className="form-actions"><button className="button-quiet" type="button" disabled={pending} onClick={onCancel}>Cancelar</button><button className="button-gold" type="submit" disabled={pending}>{pending ? "Salvando…" : incident ? "Salvar alterações" : "Salvar ocorrência"}</button></div>
       </fieldset>
     </form>
   );
 }
+

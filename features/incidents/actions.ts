@@ -10,7 +10,7 @@ import type { Incident, IncidentError, IncidentResult } from "./types";
 const unavailable: IncidentError = { ok: false, code: "unavailable", message: "Não foi possível concluir agora. Tente novamente em instantes." };
 const forbidden: IncidentError = { ok: false, code: "forbidden", message: "Você não tem permissão para esta ação. Verifique seu acesso com o administrador." };
 const notFound: IncidentError = { ok: false, code: "not_found", message: "A ocorrência não está disponível ou seu acesso mudou. Atualize o mês e tente novamente." };
-const invalid: IncidentError = { ok: false, code: "validation", message: "Confira a data, os horários e a anotação informados." };
+const invalid: IncidentError = { ok: false, code: "validation", message: "Confira a data e os horários informados." };
 function safeError(cause: unknown): IncidentError {
   const code = typeof cause === "object" && cause !== null && "code" in cause ? String(cause.code) : "";
   if (code === "23P01" || code === "23505") return { ok: false, code: "conflict", message: "Este dia já tem um registro incompatível. Atualize o mês e revise as ocorrências antes de tentar novamente." };
@@ -71,3 +71,4 @@ export async function deleteIncident(id: string): Promise<IncidentResult<{ id: s
     return { ok: true, id };
   } catch (cause) { return safeError(cause); }
 }
+

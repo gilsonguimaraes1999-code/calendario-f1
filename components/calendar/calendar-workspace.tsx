@@ -29,6 +29,11 @@ export function CalendarWorkspace({ initialDate, initialIncidents, permissions, 
   const [panelOpen, setPanelOpen] = useState(false);
   const [startInCreate, setStartInCreate] = useState(false);
   const [notice, setNotice] = useState("");
+  useEffect(() => {
+    if (!notice) return;
+    const timeout = window.setTimeout(() => setNotice(""), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
   const metrics = aggregateMonth(incidents, year, month);
   const summary = buildMonthlySummary(metrics);
   const monthName = new Intl.DateTimeFormat("pt-BR", { month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(year, month - 1, 1)));
@@ -106,3 +111,4 @@ export function CalendarWorkspace({ initialDate, initialIncidents, permissions, 
     </main>
   );
 }
+

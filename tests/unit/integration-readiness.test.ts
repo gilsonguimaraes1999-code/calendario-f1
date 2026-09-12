@@ -14,9 +14,10 @@ it("allows both exact local Auth destinations without broadening the allowlist",
   expect(config).toContain('site_url = "http://localhost:3000"');
 });
 
-it("documents the authorized repository without claiming deployment", () => {
+it("documents the published repository and production deployment", () => {
   const readme = readFileSync(resolve("README.md"), "utf8");
   expect(readme).toContain("https://github.com/gilsonguimaraes1999-code/calendario-f1");
-  expect(readme).toContain("publicação do código no GitHub foi autorizada");
-  expect(readme).not.toContain("próxima etapa, ainda não autorizada/executada");
+  expect(readme).toContain("https://calendario-f1.vercel.app");
+  expect(readme).toContain("Supabase `ztmlanvtmpdphtxjnwcy`");
 });
+

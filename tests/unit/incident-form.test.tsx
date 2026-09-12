@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { IncidentForm } from "@/components/calendar/incident-form";
 import { DayPanel } from "@/components/calendar/day-panel";
@@ -27,14 +27,16 @@ describe("IncidentForm", () => {
     expect(input).toHaveAttribute("inputmode", "text");
   });
 
-  it("requires a note and ordered times before submitting a partial incident", () => {
+  it("allows an empty note and still requires ordered times for a partial incident", async () => {
     const save = vi.fn();
     render(<IncidentForm date="2026-09-02" onSave={save} onCancel={() => {}} />);
-    fireEvent.click(screen.getByRole("button", { name: "Salvar ocorrência" }));
-    expect(save).not.toHaveBeenCalled();
-    expect(screen.getByRole("alert")).toHaveTextContent("Anotação obrigatória");
-    fireEvent.change(screen.getByLabelText("Anotação"), { target: { value: "  Falha de conexão  " } });
     fireEvent.change(screen.getByLabelText("Início"), { target: { value: "10:20" } });
+    fireEvent.change(screen.getByLabelText("Fim"), { target: { value: "10:40" } });
+    fireEvent.click(screen.getByRole("button", { name: "Salvar ocorrência" }));
+    await waitFor(() => expect(save).toHaveBeenCalledWith({ date: "2026-09-02", kind: "partial", startTime: "10:20", endTime: "10:40", note: "" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Salvar ocorrência" })).toBeEnabled());
+    save.mockClear();
+    fireEvent.change(screen.getByLabelText("Anotação"), { target: { value: "  Falha de conexão  " } });
     fireEvent.change(screen.getByLabelText("Fim"), { target: { value: "10:00" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar ocorrência" }));
     expect(screen.getByRole("alert")).toHaveTextContent("O horário final deve ser posterior ao inicial");
@@ -44,14 +46,16 @@ describe("IncidentForm", () => {
     expect(save).toHaveBeenCalledWith({ date: "2026-09-02", kind: "partial", startTime: "10:20", endTime: "10:40", note: "Falha de conexão" });
   });
 
-  it("hides and nulls times for a full day, while retaining the required note", () => {
+  it("hides and nulls times for a full day while allowing no note", async () => {
     const save = vi.fn();
     render(<IncidentForm date="2026-09-02" onSave={save} onCancel={() => {}} />);
     fireEvent.click(screen.getByRole("radio", { name: "Dia inteiro" }));
     expect(screen.queryByLabelText("Início")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Fim")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Salvar ocorrência" }));
-    expect(save).not.toHaveBeenCalled();
+    await waitFor(() => expect(save).toHaveBeenCalledWith({ date: "2026-09-02", kind: "full_day", startTime: null, endTime: null, note: "" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "Salvar ocorrência" })).toBeEnabled());
+    save.mockClear();
     fireEvent.change(screen.getByLabelText("Anotação"), { target: { value: "Manutenção" } });
     fireEvent.click(screen.getByRole("button", { name: "Salvar ocorrência" }));
     expect(save).toHaveBeenCalledWith({ date: "2026-09-02", kind: "full_day", startTime: null, endTime: null, note: "Manutenção" });
@@ -100,3 +104,4 @@ describe("DayPanel", () => {
     expect(close).toHaveBeenCalled();
   });
 });
+

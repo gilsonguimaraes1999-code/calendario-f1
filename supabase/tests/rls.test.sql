@@ -74,8 +74,8 @@ select throws_ok($$insert into incidents(incident_date,kind,note) values ('2026-
 select throws_ok($$insert into incidents(incident_date,kind,start_time,end_time,note) values ('2026-09-05','full_day','00:00','23:59','invalid')$$, '23514', null, 'full day forbids times');
 select throws_ok($$insert into incidents(incident_date,kind,start_time,end_time,note) values ('2026-09-05','partial','10:00:01','10:20','invalid')$$, '23514', null, 'time precision matches HH:MM domain');
 select throws_ok($$insert into incidents(incident_date,kind,start_time,end_time,note) values ('2026-09-05','partial','23:00','24:00','invalid')$$, '23514', null, '24:00 is outside HH:MM domain');
-select throws_ok($$insert into incidents(incident_date,kind,note) values ('2026-09-05','full_day','   ')$$, '23514', null, 'blank note rejected');
-select throws_ok($$insert into incidents(incident_date,kind,note) values ('2026-09-05','full_day',E'\t\n')$$, '23514', null, 'whitespace-only note rejected');
+select lives_ok($$insert into incidents(incident_date,kind,note) values ('2026-09-07','full_day','')$$, 'blank note is optional');
+select lives_ok($$update incidents set note=E'\t\n' where incident_date='2026-09-07'$$, 'whitespace-only note is accepted by storage');
 select throws_ok($$insert into incidents(incident_date,kind,note) values ('2026-09-05','unknown','invalid')$$, '23514', null, 'unknown incident kind rejected');
 select throws_ok($$insert into incidents(incident_date,kind,note) values ('2026-09-02','full_day','conflict')$$, '23P01', null, 'full day cannot follow partial');
 select throws_ok($$insert into incidents(incident_date,kind,start_time,end_time,note) values ('2026-09-03','partial','10:00','10:20','conflict')$$, '23P01', null, 'partial cannot follow full day');
@@ -160,3 +160,4 @@ reset role;
 
 select * from finish();
 rollback;
+

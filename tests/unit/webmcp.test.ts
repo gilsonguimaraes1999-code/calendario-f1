@@ -46,6 +46,11 @@ it("persists before confirming and derives metrics from the personal scope",asyn
   const all=await (await POST(request("consult_calendar_month",{year:2026,month:9}))).json();
   expect(all.incidents).toHaveLength(2);expect(all.metrics.unavailableMinutes).toBe(80);
 });
+it("accepts registration without an annotation",async()=>{
+  const response=await POST(request("register_incident",{date:"2026-09-04",kind:"full_day",startTime:null,endTime:null}));
+  expect(response.status).toBe(200);
+  expect(backend.state.writes[0]).toMatchObject({incident_date:"2026-09-04",note:""});
+});
 it("registers and cleans up browser tools, returning transport results",async()=>{
   const registrations: {tool:{name:string;execute:(input:unknown)=>Promise<unknown>};signal:AbortSignal}[]=[];
   const execute=vi.fn(async()=>({ok:true}));
@@ -60,3 +65,4 @@ it("handles unsupported contexts and rejected registration without throwing",asy
   expect(()=>registerCalendarTools({registerTool:()=>Promise.reject(new Error("unsupported"))},async()=>null)()).not.toThrow();
   await Promise.resolve();
 });
+

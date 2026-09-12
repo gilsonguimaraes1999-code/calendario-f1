@@ -10,6 +10,7 @@ beforeEach(() => { backend = incidentBackend(); boundary.client = backend.client
 afterEach(cleanup);
 describe("calendar persistence", () => {
   it("registers browser tools that persist and update the visible month",async()=>{
+    vi.useFakeTimers();
     const tools=new Map<string,{execute:(input:unknown)=>Promise<unknown>}>();
     Object.defineProperty(document,"modelContext",{configurable:true,value:{registerTool:(tool:{name:string;execute:(input:unknown)=>Promise<unknown>})=>tools.set(tool.name,tool)}});
     try {
@@ -21,7 +22,10 @@ describe("calendar persistence", () => {
       expect(backend.state.rows).toHaveLength(1);
       expect(screen.getByLabelText("2 de outubro, 1 interrupção, 20 minutos")).toBeInTheDocument();
       expect(screen.getByText(/Em outubro, o F1 apresentou falha/)).toBeInTheDocument();
-    }finally{delete (document as Document&{modelContext?:unknown}).modelContext;}
+      expect(screen.getByRole("status", { name: "" })).toHaveTextContent("Ocorrência registrada.");
+      act(()=>vi.advanceTimersByTime(4000));
+      expect(screen.queryByText("Ocorrência registrada.")).not.toBeInTheDocument();
+    }finally{vi.useRealTimers();delete (document as Document&{modelContext?:unknown}).modelContext;}
   });
   it("hides the global create control without server-granted permission", () => {
     render(<CalendarWorkspace initialDate="2026-09-11" initialIncidents={[]} permissions={{ ...backend.state.flags, can_create: false }} />);
@@ -63,3 +67,4 @@ describe("calendar persistence", () => {
     expect(await screen.findByRole("heading", { name: "outubro 2026" })).toBeInTheDocument();
   });
 });
+

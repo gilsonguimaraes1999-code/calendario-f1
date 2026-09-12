@@ -70,7 +70,7 @@ export function DayPanel({ date, incidents, permissions, startInCreate = false, 
             <div className="incident-list">{dayIncidents.map((incident) => <article key={incident.id} className="incident-card" data-kind={incident.kind}>
               <div className="incident-card__heading"><span className="incident-badge"><i className={`status-dot status-dot--${incident.kind === "full_day" ? "full" : "partial"}`} />{incident.kind === "full_day" ? "Dia inteiro" : "Interrupção parcial"}</span><div className="incident-card__actions">{permissions.edit && <button type="button" className="icon-button" aria-label="Editar ocorrência" onClick={() => setEditing(incident)}><Pencil size={15} /></button>}{permissions.delete && <button type="button" className="icon-button" aria-label="Excluir ocorrência" onClick={() => setDeleting(incident.id)}><Trash2 size={15} /></button>}</div></div>
               <div className="incident-card__time"><Clock3 size={14} />{incident.kind === "full_day" ? "24 horas de indisponibilidade" : `${incident.startTime} — ${incident.endTime} · ${calculateDurationMinutes(incident.startTime!, incident.endTime!)} min`}</div>
-              <p>{incident.note}</p>
+              {incident.note && <p>{incident.note}</p>}
               {deleting === incident.id && <div className="delete-confirmation"><p>Excluir esta ocorrência? As métricas do mês serão recalculadas.</p>{deleteError && <p className="form-error" role="alert">{deleteError}</p>}<div><button type="button" className="button-quiet" disabled={busy} onClick={() => { setDeleting(null); setDeleteError(""); }}>Manter ocorrência</button><button type="button" className="button-danger" disabled={busy} onClick={async () => {
                 if (!permissions.delete || busy) return;
                 setBusy(true); setDeleteError("");
@@ -85,3 +85,4 @@ export function DayPanel({ date, incidents, permissions, startInCreate = false, 
     </div>
   );
 }
+
